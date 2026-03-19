@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: calendar-sync
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT wsgi:app
+    envVars:
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: DASHBOARD_USERNAME
+        value: admin
+      - key: DASHBOARD_PASSWORD
+        sync: false        # set this in the Render dashboard — do not commit
