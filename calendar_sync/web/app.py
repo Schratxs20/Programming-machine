@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import functools
+import hashlib
 import json
 import logging
 import os
+import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 
 from ..config import load_config, Config
 from ..cli import build_providers
@@ -20,12 +23,31 @@ _config_path: str = "config.yaml"
 _sync_history: list[dict] = []
 
 
+def _check_credentials(username: str, password: str) -> bool:
+    expected_user = os.environ.get("DASHBOARD_USERNAME", "admin")
+    expected_pass = os.environ.get("DASHBOARD_PASSWORD", "changeme")
+    user_ok = secrets.compare_digest(username, expected_user)
+    pass_ok = secrets.compare_digest(
+        hashlib.sha256(password.encode()).hexdigest(),
+        hashlib.sha256(expected_pass.encode()).hexdigest(),
+    )
+    return user_ok and pass_ok
+
+
 def create_app(config_path: str = "config.yaml") -> Flask:
     global _config_path
     _config_path = config_path
 
     app = Flask(__name__)
     app.secret_key = os.environ.get("FLASK_SECRET_KEY", "calendar-sync-dev-key")
+
+    def login_required(f):
+        @functools.wraps(f)
+        def decorated(*args, **kwargs):
+            if not session.get("logged_in"):
+                return redirect(url_for("login"))
+            return f(*args, **kwargs)
+        return decorated
 
     def load_cfg() -> tuple[Config | None, str | None]:
         try:
@@ -35,7 +57,28 @@ def create_app(config_path: str = "config.yaml") -> Flask:
         except Exception as e:
             return None, str(e)
 
+    @app.route("/login", methods=["GET", "POST"])
+    def login():
+        if session.get("logged_in"):
+            return redirect(url_for("dashboard"))
+        if request.method == "POST":
+            username = request.form.get("username", "")
+            password = request.form.get("password", "")
+            if _check_credentials(username, password):
+                session["logged_in"] = True
+                session["username"] = username
+                return redirect(url_for("dashboard"))
+            flash("Invalid username or password.", "danger")
+        return render_template("login.html")
+
+    @app.route("/logout")
+    def logout():
+        session.clear()
+        flash("You have been logged out.", "info")
+        return redirect(url_for("login"))
+
     @app.route("/")
+    @login_required
     def dashboard():
         cfg, err = load_cfg()
         rules = cfg.sync_rules if cfg else []
@@ -59,6 +102,7 @@ def create_app(config_path: str = "config.yaml") -> Flask:
         )
 
     @app.route("/sync", methods=["POST"])
+    @login_required
     def run_sync():
         dry_run = request.form.get("dry_run") == "on"
         rule_name = request.form.get("rule") or None
@@ -114,6 +158,7 @@ def create_app(config_path: str = "config.yaml") -> Flask:
         return redirect(url_for("dashboard"))
 
     @app.route("/calendars")
+    @login_required
     def calendars():
         cfg, err = load_cfg()
         if err:
@@ -132,6 +177,7 @@ def create_app(config_path: str = "config.yaml") -> Flask:
         return render_template("calendars.html", providers_data=providers_data, config_error=None)
 
     @app.route("/events")
+    @login_required
     def events():
         cfg, err = load_cfg()
         if err:
@@ -179,6 +225,7 @@ def create_app(config_path: str = "config.yaml") -> Flask:
         )
 
     @app.route("/config")
+    @login_required
     def config_view():
         cfg, err = load_cfg()
         config_text = ""
@@ -196,6 +243,7 @@ def create_app(config_path: str = "config.yaml") -> Flask:
         )
 
     @app.route("/api/status")
+    @login_required
     def api_status():
         cfg, err = load_cfg()
         return jsonify({
