@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – Calendar Sync{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <h4 class="mb-0 fw-semibold">Dashboard</h4>
+</div>
+
+{% if config_error %}
+<div class="alert alert-warning d-flex align-items-start gap-2">
+  <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+  <div>
+    <strong>Config not loaded:</strong> {{ config_error }}<br>
+    <small>Copy <code>config.example.yaml</code> to <code>{{ config_path }}</code> and fill in your credentials.</small>
+  </div>
+</div>
+{% endif %}
+
+<!-- Provider pills -->
+<div class="mb-4">
+  {% if providers %}
+    {% for p in providers %}
+      <span class="badge bg-primary badge-provider me-1"><i class="bi bi-plug"></i> {{ p }}</span>
+    {% endfor %}
+  {% else %}
+    <span class="text-muted small">No providers configured yet.</span>
+  {% endif %}
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Sync card -->
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;">Run Sync</h6>
+        <form method="post" action="{{ url_for('run_sync') }}">
+          <div class="mb-3">
+            <label class="form-label small">Rule</label>
+            <select name="rule" class="form-select form-select-sm">
+              <option value="">All rules</option>
+              {% for rule in rules %}
+                <option value="{{ rule.name }}">{{ rule.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="dry_run" id="dry_run">
+            <label class="form-check-label small" for="dry_run">Dry run (preview only)</label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100" {% if not rules %}disabled{% endif %}>
+            <i class="bi bi-arrow-repeat me-1"></i> Sync Now
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules summary -->
+  <div class="col-md-6 col-lg-8">
+    <div class="card h-100">
+      <div class="card-body">
+        <h6 class="card-title text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;">Sync Rules</h6>
+        {% if rules %}
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Source</th>
+                  <th>Target</th>
+                  <th>Direction</th>
+                  <th>Conflict</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for rule in rules %}
+                <tr>
+                  <td class="fw-medium">{{ rule.name }}</td>
+                  <td><code>{{ rule.source }}</code></td>
+                  <td><code>{{ rule.target }}</code></td>
+                  <td>
+                    {% if rule.direction == 'bidirectional' %}
+                      <i class="bi bi-arrow-left-right text-primary"></i>
+                    {% elif rule.direction == 'source_to_target' %}
+                      <i class="bi bi-arrow-right text-success"></i>
+                    {% else %}
+                      <i class="bi bi-arrow-left text-warning"></i>
+                    {% endif %}
+                    <span class="small">{{ rule.direction }}</span>
+                  </td>
+                  <td><span class="badge bg-secondary">{{ rule.conflict_strategy }}</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No sync rules defined.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Sync history -->
+<div class="card">
+  <div class="card-body">
+    <h6 class="card-title text-muted text-uppercase" style="font-size:.75rem;letter-spacing:.05em;">Recent Sync History</h6>
+    {% if history %}
+      {% for entry in history %}
+        {% set has_errors = entry.results | selectattr('errors', 'defined') | selectattr('errors') | list | length > 0 %}
+        <div class="history-entry {% if entry.dry_run %}dry-run{% elif has_errors %}has-errors{% else %}success{% endif %}">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="small fw-semibold">{{ entry.timestamp }}</span>
+            {% if entry.dry_run %}
+              <span class="badge bg-info text-dark">dry run</span>
+            {% endif %}
+            {% if has_errors %}
+              <span class="badge bg-danger">errors</span>
+            {% else %}
+              <span class="badge bg-success">ok</span>
+            {% endif %}
+          </div>
+          <div class="row g-2">
+            {% for r in entry.results %}
+            <div class="col-auto">
+              <span class="small text-muted">{{ r.rule }}:</span>
+              {% if r.error is defined and r.error %}
+                <span class="text-danger small">{{ r.error }}</span>
+              {% else %}
+                <span class="text-success small">+{{ r.created }}</span>
+                <span class="text-warning small">~{{ r.updated }}</span>
+                <span class="text-danger small">-{{ r.deleted }}</span>
+                <span class="text-muted small">{{ r.skipped }} skipped</span>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted small mb-0">No syncs run yet this session.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
