@@ -16,10 +16,36 @@
         {% if config_text %}
           <pre class="mb-0 p-3" style="background:#1e1e1e;color:#d4d4d4;font-size:.8rem;border-radius:0 0 .375rem .375rem;overflow-x:auto;">{{ config_text }}</pre>
         {% else %}
-          <div class="p-3 text-muted">
-            <p>No config file found at <code>{{ config_path }}</code>.</p>
-            <p class="mb-0">Copy <code>config.example.yaml</code> to get started:</p>
-            <pre class="mt-2 mb-0 p-2 bg-light rounded">cp config.example.yaml config.yaml</pre>
+          <div class="p-3">
+            <p class="text-muted mb-3">No config loaded. On Render, paste your YAML into the <code>CONFIG_YAML</code> environment variable:</p>
+            <ol class="small mb-3">
+              <li>Go to your Render dashboard → your service → <strong>Environment</strong></li>
+              <li>Add a variable named <code>CONFIG_YAML</code></li>
+              <li>Paste your full YAML config as the value</li>
+              <li>Click <strong>Save Changes</strong> — Render redeploys automatically</li>
+            </ol>
+            <details>
+              <summary class="small text-primary" style="cursor:pointer;">Show example config to copy</summary>
+              <pre class="mt-2 mb-0 p-3 rounded" style="background:#1e1e1e;color:#d4d4d4;font-size:.78rem;overflow-x:auto;">providers:
+  ical:
+    feeds:
+      - name: holidays
+        url: https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics
+
+sync_rules:
+  - name: holidays-readonly
+    source: ical:holidays
+    target: ical:holidays
+    direction: source_to_target
+    lookback_days: 0
+    lookahead_days: 365
+    conflict_strategy: skip
+
+options:
+  log_level: INFO
+  state_file: /tmp/calendar_sync_state.json
+  dry_run: false</pre>
+            </details>
           </div>
         {% endif %}
       </div>

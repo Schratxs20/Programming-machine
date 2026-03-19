@@ -11,3 +11,5 @@ services:
         value: admin
       - key: DASHBOARD_PASSWORD
         sync: false        # set this in the Render dashboard — do not commit
+      - key: CONFIG_YAML
+        sync: false        # paste your full config.yaml contents here
