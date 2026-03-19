@@ -1,0 +1,47 @@
+providers:
+  google:
+    credentials_file: credentials.json
+    token_file: token.json
+    calendar_ids:
+      - primary
+
+  outlook:
+    client_id: your-azure-client-id
+    client_secret: your-azure-client-secret
+    tenant_id: common
+    calendar_ids:
+      - Calendar
+
+  caldav:
+    url: https://dav.example.com/
+    username: user@example.com
+    password: your-password
+    calendar_paths:
+      - /dav/calendars/user@example.com/default/
+
+  ical:
+    feeds:
+      - name: holidays
+        url: https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics
+
+sync_rules:
+  - name: work-bidirectional
+    source: google:primary
+    target: outlook:Calendar
+    direction: bidirectional
+    lookback_days: 7
+    lookahead_days: 90
+    conflict_strategy: newer_wins
+
+  - name: holidays-readonly
+    source: ical:holidays
+    target: google:primary
+    direction: source_to_target
+    lookback_days: 0
+    lookahead_days: 365
+    conflict_strategy: skip
+
+options:
+  log_level: INFO
+  state_file: .calendar_sync_state.json
+  dry_run: false
