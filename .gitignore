@@ -1,0 +1,31 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Credentials and secrets
+credentials.json
+token.json
+config.yaml
+*.secret
+
+# State files
+.calendar_sync_state.json
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Virtualenv
+venv/
+env/
+.venv/

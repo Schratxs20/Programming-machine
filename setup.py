@@ -1,0 +1,28 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="calendar-sync",
+    version="1.0.0",
+    packages=find_packages(),
+    install_requires=[
+        "google-auth>=2.0.0",
+        "google-auth-oauthlib>=1.0.0",
+        "google-api-python-client>=2.0.0",
+        "msal>=1.20.0",
+        "requests>=2.28.0",
+        "caldav>=1.3.0",
+        "icalendar>=5.0.0",
+        "pyyaml>=6.0",
+        "click>=8.0.0",
+        "python-dateutil>=2.8.0",
+        "pytz>=2023.3",
+        "recurring-ical-events>=2.1.0",
+        "schedule>=1.2.0",
+    ],
+    entry_points={
+        "console_scripts": [
+            "calendar-sync=calendar_sync.cli:main",
+        ],
+    },
+    python_requires=">=3.10",
+)
