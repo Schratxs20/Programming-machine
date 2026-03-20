@@ -1,5 +1,3 @@
-"""WSGI entry point for production deployment (gunicorn)."""
-
+"""WSGI entry point."""
 from programming_machine.web.app import create_app
-
 app = create_app()
