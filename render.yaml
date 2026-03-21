@@ -2,7 +2,7 @@ services:
   - type: web
     name: programming-machine
     runtime: python
-    buildCommand: pip install -r requirements.txt && cd frontend && npm install && npm run build
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --timeout 120 --workers 2 wsgi:app
     plan: starter          # avoids free-tier cold starts / sleep
     envVars:
