@@ -361,7 +361,7 @@ function DailyView({clients,programs,coachStyle,history,todayData,saveToday,calS
     clients.find(c=>name?.toLowerCase()?.includes(c.name.toLowerCase()))||
     clients.find(c=>c.name.toLowerCase().includes(name?.toLowerCase()||""));
 
-  const syncCal = async (calType) => {
+  const syncCal = async (calType, silent=false) => {
     const s = calSettings[calType];
     if(!s?.enabled||!s?.icalUrl) return;
     setSyncing(p=>({...p,[calType]:true}));
@@ -377,16 +377,23 @@ function DailyView({clients,programs,coachStyle,history,todayData,saveToday,calS
       if(parsed.length) {
         const existing = sessions.map(s=>s.clientName);
         const newSessions = parsed.filter(p=>!existing.includes(p.clientName));
-        await saveToday({...todayData,sessions:[...sessions,...newSessions]});
-        notify(`${parsed.length} session${parsed.length>1?"s":""} loaded from ${calType==="apple"?"Apple":"Google"} Calendar`);
-      } else {
+        if(newSessions.length) {
+          await saveToday({...todayData,sessions:[...sessions,...newSessions]});
+          if(!silent) notify(`${newSessions.length} session${newSessions.length>1?"s":""} loaded from ${calType==="apple"?"Apple":"Google"} Calendar`);
+        } else if(!silent) {
+          notify(`${parsed.length} session${parsed.length>1?"s":""} already up to date`);
+        }
+      } else if(!silent) {
         notify(`No training sessions found in ${calType==="apple"?"Apple":"Google"} Calendar today`,"warn");
       }
-    } catch(e) { notify(`Sync failed — ${e.message}`,"err"); }
+    } catch(e) { if(!silent) notify(`Sync failed — ${e.message}`,"err"); }
     setSyncing(p=>({...p,[calType]:false}));
   };
 
-  const syncAll = ()=>{ if(calSettings.google.enabled)syncCal("google"); if(calSettings.apple.enabled)syncCal("apple"); };
+  const syncAll = (silent=false)=>{ if(calSettings.google?.enabled)syncCal("google",silent); if(calSettings.apple?.enabled)syncCal("apple",silent); };
+
+  // Auto-populate from calendar on mount when settings are configured
+  useEffect(()=>{ syncAll(true); },[]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const generate = async (clientName,note="") => {
     const client = matchClient(clientName);
