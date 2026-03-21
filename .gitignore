@@ -29,3 +29,7 @@ htmlcov/
 venv/
 env/
 .venv/
+
+# Frontend
+frontend/node_modules/
+frontend/package-lock.json
