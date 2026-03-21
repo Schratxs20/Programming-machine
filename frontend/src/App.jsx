@@ -177,13 +177,13 @@ export default function App() {
   const notify = (msg,type="ok")=>{ setNotif({msg,type}); setTimeout(()=>setNotif(null),3500); };
 
   if(!ready) return (
-    <div style={{minHeight:"100vh",background:"#0a0d12",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{color:"#374151",fontFamily:"'DM Mono',monospace",fontSize:13,letterSpacing:"0.12em"}}>LOADING…</div>
+    <div style={{minHeight:"100vh",background:"#1a1a1a",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{color:"#555",fontSize:13,letterSpacing:"0.06em"}}>Loading…</div>
     </div>
   );
 
   return (
-    <Shell view={view} setView={setView} clientCount={clients.length} programCount={programs.length} notif={notif}>
+    <Shell view={view} setView={setView} notif={notif}>
       {view==="daily"   && <DailyView   clients={clients} programs={programs} coachStyle={coachStyle} history={history} todayData={todayData} saveToday={saveToday} calSettings={calSettings} notify={notify} setView={setView}/>}
       {view==="manage"  && <ManageView  clients={clients} saveClients={saveClients} notify={notify}/>}
       {view==="library" && <LibraryView programs={programs} savePrograms={savePrograms} coachStyle={coachStyle} saveStyle={saveStyle} notify={notify}/>}
@@ -194,44 +194,75 @@ export default function App() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SHELL
+   SHELL  — Fitera-style dark UI with bottom tab bar
 ═══════════════════════════════════════════════════════════════ */
-function Shell({view,setView,clientCount,programCount,notif,children}) {
+const F = {
+  bg:      "#1a1a1a",
+  card:    "#252525",
+  card2:   "#2e2e2e",
+  text:    "#ffffff",
+  text2:   "#888888",
+  text3:   "#555555",
+  purple:  "#8968CD",
+  orange:  "#F4623A",
+  radius:  "16px",
+  font:    "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif",
+};
+
+function Shell({view,setView,notif,children}) {
   const NAV=[
-    {id:"daily",    label:"Today",    icon:"◉"},
-    {id:"manage",   label:"Clients",  icon:"◈"},
-    {id:"library",  label:"Library",  icon:"⊞"},
-    {id:"history",  label:"History",  icon:"⊙"},
-    {id:"settings", label:"Calendars",icon:"⟳"},
+    {id:"daily",    label:"Today",    svg:<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>},
+    {id:"manage",   label:"Clients",  svg:<><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M19 8v6M22 11h-6"/></>},
+    {id:"library",  label:"Library",  svg:<><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></>},
+    {id:"history",  label:"History",  svg:<><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-4M3 3v5h5"/></>},
+    {id:"settings", label:"Calendar", svg:<><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>},
   ];
+
   return (
-    <div style={{minHeight:"100vh",background:"#0a0d12",fontFamily:"'DM Sans','Segoe UI',sans-serif"}}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap'); *{box-sizing:border-box;margin:0;padding:0;} ::-webkit-scrollbar{width:3px;height:3px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#1e2530;border-radius:4px} input,textarea,select{outline:none;font-family:'DM Sans',sans-serif;} @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}} @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}} @keyframes spin{to{transform:rotate(360deg)}} @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}} .card-enter{animation:fadeUp 0.45s cubic-bezier(0.16,1,0.3,1) both;} .card-enter:nth-child(1){animation-delay:0.04s} .card-enter:nth-child(2){animation-delay:0.09s} .card-enter:nth-child(3){animation-delay:0.14s} .navbtn:hover{color:#d1d5db!important;background:rgba(255,255,255,0.04)!important;} .abtn:hover{opacity:0.82;transform:translateY(-1px);} @media print{nav,.no-print{display:none!important;} body{background:white!important;} .print-card{page-break-after:always;}}`}</style>
+    <div style={{minHeight:"100vh",background:F.bg,fontFamily:F.font,color:F.text}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0;}
+        ::-webkit-scrollbar{width:0;height:0}
+        input,textarea,select{outline:none;font-family:${F.font};background:transparent;}
+        button{cursor:pointer;font-family:${F.font};}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        .fe{animation:fadeUp 0.38s cubic-bezier(0.16,1,0.3,1) both;}
+        .fe:nth-child(1){animation-delay:.03s}.fe:nth-child(2){animation-delay:.07s}
+        .fe:nth-child(3){animation-delay:.11s}.fe:nth-child(4){animation-delay:.15s}
+        .fe:nth-child(5){animation-delay:.19s}
+        .nbtn{transition:opacity 0.15s;}
+        .nbtn:active{opacity:0.6;}
+        .abtn{transition:opacity 0.15s,transform 0.15s;}
+        .abtn:active{opacity:0.75;transform:scale(0.97);}
+        @media print{.no-print{display:none!important;}body{background:white!important;}.print-card{page-break-after:always;}}
+      `}</style>
 
       {notif&&(
-        <div style={{position:"fixed",top:20,right:20,zIndex:9999,padding:"12px 20px",borderRadius:10,fontFamily:"'DM Mono',monospace",fontSize:12,letterSpacing:"0.05em",background:notif.type==="err"?"#1f0a0a":notif.type==="warn"?"#1a1400":"#0a1a0e",border:`1px solid ${notif.type==="err"?"#5b1c1c":notif.type==="warn"?"#5b4a00":"#1a4d2c"}`,color:notif.type==="err"?"#f87171":notif.type==="warn"?"#fbbf24":"#6ee7b7",boxShadow:"0 8px 32px rgba(0,0,0,0.6)"}}>
+        <div style={{position:"fixed",top:20,right:20,left:20,zIndex:9999,padding:"14px 18px",borderRadius:14,fontSize:14,fontWeight:500,background:notif.type==="err"?"#3a1a1a":notif.type==="warn"?"#3a2e00":"#1a2e1a",color:notif.type==="err"?"#ff6b6b":notif.type==="warn"?"#fbbf24":"#6ee7b7",boxShadow:"0 8px 40px rgba(0,0,0,0.7)",textAlign:"center"}}>
           {notif.msg}
         </div>
       )}
 
-      <nav style={{position:"sticky",top:0,zIndex:100,background:"rgba(10,13,18,0.9)",backdropFilter:"blur(24px)",borderBottom:"1px solid rgba(255,255,255,0.05)",padding:"0 28px",display:"flex",alignItems:"center",height:54}}>
-        <div style={{display:"flex",alignItems:"center",gap:9,paddingRight:24,borderRight:"1px solid rgba(255,255,255,0.06)",marginRight:6}}>
-          <div style={{width:26,height:26,background:"linear-gradient(135deg,#f97316,#c2410c)",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>⚡</div>
-          <span style={{fontFamily:"'DM Serif Display',serif",fontSize:14,color:"#f1f5f9"}}>Coach</span>
-        </div>
-        {NAV.map(n=>(
-          <button key={n.id} className="navbtn" onClick={()=>setView(n.id)} style={{padding:"0 16px",height:54,background:"none",border:"none",cursor:"pointer",borderBottom:view===n.id?"2px solid #f97316":"2px solid transparent",color:view===n.id?"#f97316":"#6b7280",fontSize:12,fontFamily:"'DM Sans',sans-serif",fontWeight:500,transition:"all 0.18s",display:"flex",alignItems:"center",gap:6}}>
-            <span style={{fontSize:11,opacity:0.7}}>{n.icon}</span>{n.label}
-          </button>
-        ))}
-        <div style={{marginLeft:"auto",display:"flex",gap:18,fontSize:11,color:"#374151",fontFamily:"'DM Mono',monospace"}}>
-          <span><span style={{color:"#6b7280"}}>{clientCount}</span> clients</span>
-          <span><span style={{color:"#6b7280"}}>{programCount}</span> programs</span>
-        </div>
-      </nav>
-
-      <div style={{maxWidth:880,margin:"0 auto",padding:"40px 24px 100px"}}>
+      {/* Page content */}
+      <div style={{maxWidth:600,margin:"0 auto",padding:"28px 20px 110px"}}>
         {children}
+      </div>
+
+      {/* Bottom tab bar — Fitera style */}
+      <div className="no-print" style={{position:"fixed",bottom:0,left:0,right:0,zIndex:200,display:"flex",justifyContent:"center",paddingBottom:"max(20px,env(safe-area-inset-bottom))",paddingTop:10,background:`linear-gradient(transparent,${F.bg} 40%)`}}>
+        <div style={{display:"flex",gap:4,background:"#2a2a2a",borderRadius:100,padding:"8px 10px",boxShadow:"0 4px 32px rgba(0,0,0,0.6)"}}>
+          {NAV.map(n=>{
+            const active=view===n.id;
+            return (
+              <button key={n.id} className="nbtn" onClick={()=>setView(n.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:active?"8px 18px":"8px 14px",borderRadius:100,border:"none",background:active?"#383838":"transparent",color:active?F.text:F.text3,transition:"all 0.2s",minWidth:active?72:52}}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{n.svg}</svg>
+                {active&&<span style={{fontSize:10,fontWeight:600,letterSpacing:"0.01em",color:F.text}}>{n.label}</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -257,12 +288,12 @@ function CalendarSettings({calSettings,saveCalSettings,notify}) {
         ].map(cal=>{
           const s=local[cal.id]; const isOn=s.enabled;
           return (
-            <div key={cal.id} style={{background:"#111827",border:`1px solid ${isOn?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.05)"}`,borderRadius:16,overflow:"hidden"}}>
+            <div key={cal.id} style={{background:"#252525",border:`1px solid ${isOn?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.05)"}`,borderRadius:16,overflow:"hidden"}}>
               <div style={{padding:"20px 24px",display:"flex",alignItems:"center",gap:16,borderBottom:isOn?"1px solid rgba(255,255,255,0.05)":"none"}}>
                 <div style={{width:40,height:40,borderRadius:10,background:`${cal.color}18`,border:`1px solid ${cal.color}33`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{cal.icon}</div>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:15,fontWeight:600,color:"#f9fafb",marginBottom:3}}>{cal.name}</div>
-                  <div style={{fontSize:12,color:"#4b5563",lineHeight:1.5}}>{cal.howto}</div>
+                  <div style={{fontSize:15,fontWeight:600,color:"#fff",marginBottom:3}}>{cal.name}</div>
+                  <div style={{fontSize:12,color:"#888",lineHeight:1.5}}>{cal.howto}</div>
                 </div>
                 <div onClick={()=>update(cal.id,"enabled",!isOn)} style={{width:44,height:24,borderRadius:12,cursor:"pointer",background:isOn?"#f97316":"rgba(255,255,255,0.08)",position:"relative",border:`1px solid ${isOn?"#f97316":"rgba(255,255,255,0.1)"}`,flexShrink:0,transition:"background 0.2s"}}>
                   <div style={{position:"absolute",top:2,left:isOn?22:2,width:18,height:18,borderRadius:9,background:"white",transition:"left 0.2s",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
@@ -272,20 +303,20 @@ function CalendarSettings({calSettings,saveCalSettings,notify}) {
                 <div style={{padding:"20px 24px",display:"flex",flexDirection:"column",gap:16}}>
                   <div>
                     <label style={LBL}>iCal Feed URL</label>
-                    <input value={s.icalUrl} onChange={e=>update(cal.id,"icalUrl",e.target.value)} placeholder="webcal://... or https://calendar.google.com/calendar/ical/..." style={{...INP,marginTop:6,fontFamily:"'DM Mono',monospace",fontSize:11}}/>
+                    <input value={s.icalUrl} onChange={e=>update(cal.id,"icalUrl",e.target.value)} placeholder="webcal://... or https://calendar.google.com/calendar/ical/..." style={{...INP,marginTop:6,fontSize:11}}/>
                   </div>
                   <div>
                     <label style={LBL}>How are your events titled?</label>
                     <div style={{display:"flex",flexDirection:"column",gap:6,marginTop:8}}>
                       {FORMAT_OPTIONS.map(f=>(
                         <label key={f.id} style={{display:"flex",alignItems:"flex-start",gap:12,padding:"10px 14px",borderRadius:10,cursor:"pointer",border:`1px solid ${s.format===f.id?"rgba(249,115,22,0.4)":"rgba(255,255,255,0.06)"}`,background:s.format===f.id?"rgba(249,115,22,0.06)":"transparent"}}>
-                          <div style={{width:16,height:16,borderRadius:8,marginTop:1,flexShrink:0,border:`2px solid ${s.format===f.id?"#f97316":"#374151"}`,background:s.format===f.id?"#f97316":"transparent",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>update(cal.id,"format",f.id)}>
+                          <div style={{width:16,height:16,borderRadius:8,marginTop:1,flexShrink:0,border:`2px solid ${s.format===f.id?"#f97316":"#555"}`,background:s.format===f.id?"#f97316":"transparent",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>update(cal.id,"format",f.id)}>
                             {s.format===f.id&&<div style={{width:6,height:6,borderRadius:3,background:"white"}}/>}
                           </div>
                           <div style={{flex:1}} onClick={()=>update(cal.id,"format",f.id)}>
-                            <div style={{fontSize:13,fontWeight:500,color:s.format===f.id?"#f9fafb":"#9ca3af",marginBottom:2}}>{f.label}</div>
-                            <div style={{fontSize:11,color:"#374151"}}>{f.desc}</div>
-                            {f.example&&<div style={{marginTop:4,fontFamily:"'DM Mono',monospace",fontSize:11,color:"#4b5563",padding:"3px 8px",background:"rgba(255,255,255,0.03)",borderRadius:4,display:"inline-block"}}>{f.example}</div>}
+                            <div style={{fontSize:13,fontWeight:500,color:s.format===f.id?"#fff":"#aaa",marginBottom:2}}>{f.label}</div>
+                            <div style={{fontSize:11,color:"#555"}}>{f.desc}</div>
+                            {f.example&&<div style={{marginTop:4,fontSize:11,color:"#888",padding:"3px 8px",background:"#2e2e2e",borderRadius:4,display:"inline-block"}}>{f.example}</div>}
                           </div>
                         </label>
                       ))}
@@ -414,137 +445,149 @@ Every exercise: name, sets×reps, load/intensity, rest. Sound like a real coach.
   const bothEnabled=calSettings.google?.enabled&&calSettings.apple?.enabled;
   const isSyncing=syncing.google||syncing.apple;
 
+  // Week strip — 7 days centred on today
+  const weekDays=Array.from({length:7},(_,i)=>{
+    const d=new Date(today); d.setDate(today.getDate()-today.getDay()+i);
+    return d;
+  });
+  const DAY_NAMES=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+
   return (
     <div>
-      <div style={{marginBottom:44}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:16}}>
+      {/* Header */}
+      <div style={{marginBottom:24}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
           <div>
-            <p style={{fontSize:11,color:"#374151",letterSpacing:"0.14em",fontFamily:"'DM Mono',monospace",marginBottom:10}}>
-              {today.toLocaleDateString("en-US",{weekday:"long"}).toUpperCase()} · {today.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}).toUpperCase()}
-            </p>
-            <h1 style={{fontFamily:"'DM Serif Display',serif",fontSize:40,fontWeight:400,color:"#f9fafb",lineHeight:1.1,letterSpacing:"-0.01em"}}>
-              Daily<br/><span style={{color:"#f97316",fontStyle:"italic"}}>Programming</span>
-            </h1>
-            <p style={{marginTop:12,color:"#6b7280",fontSize:14,lineHeight:1.6,maxWidth:440}}>
-              {sessions.length===0?"Sync your calendar or add clients below to build today's sessions.":hasWorkouts===0?`${sessions.length} session${sessions.length>1?"s":""} loaded — generate workouts below.`:`${hasWorkouts} of ${sessions.length} workout${sessions.length>1?"s":""} generated.`}
-            </p>
+            <h1 style={{fontSize:34,fontWeight:700,color:"#fff",letterSpacing:"-0.5px"}}>Home</h1>
+            <p style={{fontSize:15,color:"#888",marginTop:2}}>{today.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</p>
           </div>
-          <div style={{display:"flex",flexDirection:"column",gap:10,alignItems:"flex-end"}}>
-            {!anyEnabled?(
-              <div style={{padding:"12px 16px",background:"rgba(249,115,22,0.06)",border:"1px solid rgba(249,115,22,0.2)",borderRadius:10,maxWidth:260}}>
-                <p style={{fontSize:12,color:"#fb923c",lineHeight:1.5,marginBottom:8}}>No calendars connected yet.</p>
-                <ActionBtn small onClick={()=>setView("settings")}>→ Set Up Calendars</ActionBtn>
-              </div>
-            ):(
-              <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}}>
-                {bothEnabled?(
-                  <ActionBtn onClick={syncAll} loading={isSyncing} secondary>{isSyncing?"Syncing…":"⟳  Sync Both"}</ActionBtn>
-                ):(
-                  <>
-                    {calSettings.google?.enabled&&<ActionBtn onClick={()=>syncCal("google")} loading={syncing.google} secondary>{syncing.google?"Syncing…":"🗓  Sync Google"}</ActionBtn>}
-                    {calSettings.apple?.enabled &&<ActionBtn onClick={()=>syncCal("apple")}  loading={syncing.apple}  secondary>{syncing.apple ?"Syncing…":"🍎  Sync Apple"}</ActionBtn>}
-                  </>
-                )}
-                {sessions.length>0&&hasWorkouts<sessions.length&&<ActionBtn onClick={generateAll}>⚡  Generate All</ActionBtn>}
-                {hasWorkouts>0&&<ActionBtn onClick={()=>window.print()} secondary small>⊟  Print</ActionBtn>}
-              </div>
+          <div style={{display:"flex",gap:8}}>
+            {anyEnabled&&(
+              <button className="nbtn" onClick={isSyncing?undefined:syncAll} style={{width:42,height:42,borderRadius:21,background:"#252525",border:"none",color:isSyncing?"#555":"#fff",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {isSyncing?"…":"⟳"}
+              </button>
+            )}
+            {!anyEnabled&&(
+              <button className="nbtn" onClick={()=>setView("settings")} style={{height:42,padding:"0 16px",borderRadius:21,background:"#252525",border:"none",color:"#888",fontSize:13,fontWeight:600}}>
+                + Calendar
+              </button>
             )}
           </div>
         </div>
 
+        {/* Week strip */}
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:24}}>
+          {weekDays.map((d,i)=>{
+            const isToday=d.toDateString()===today.toDateString();
+            return (
+              <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+                <span style={{fontSize:11,fontWeight:600,color:isToday?F.orange:"#555",letterSpacing:"0.04em"}}>{DAY_NAMES[i]}</span>
+                <div style={{width:38,height:38,borderRadius:10,background:isToday?"#333":"transparent",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                  <span style={{fontSize:18,fontWeight:isToday?700:400,color:isToday?"#fff":"#666"}}>{d.getDate()}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Workouts section header */}
+        <SectionHeader icon="🏋️" title="Workouts" sub={`${sessions.length} ${sessions.length===1?"Session":"Sessions"} Today`}/>
+
+        {/* Client quick-add chips */}
         {clients.length>0&&(
-          <div style={{marginTop:24,display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
-            <span style={{fontSize:10,color:"#374151",letterSpacing:"0.1em",fontFamily:"'DM Mono',monospace",flexShrink:0}}>+ ADD</span>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
             {clients.map(c=>{
               const already=sessions.find(s=>s.clientName===c.name);
-              const lv=LEVEL_META[c.level||"medium"];
               return (
-                <button key={c.name} onClick={()=>{ if(!already)saveToday({...todayData,sessions:[...sessions,{clientName:c.name,time:""}]}); }} style={{padding:"6px 14px",borderRadius:100,fontSize:12,fontWeight:500,cursor:already?"default":"pointer",border:`1px solid ${already?lv.accent+"55":lv.accent+"22"}`,background:already?lv.glow:"transparent",color:already?lv.accent:"#6b7280",transition:"all 0.15s",display:"flex",alignItems:"center",gap:6}}>
-                  <span style={{width:5,height:5,borderRadius:"50%",background:already?lv.accent:"#374151",display:"inline-block",flexShrink:0}}/>
-                  {c.name}{already?" ✓":""}
+                <button key={c.name} className="nbtn" onClick={()=>{ if(!already)saveToday({...todayData,sessions:[...sessions,{clientName:c.name,time:""}]}); }} style={{padding:"7px 14px",borderRadius:100,fontSize:13,fontWeight:600,border:"none",background:already?"#383838":F.purple+"33",color:already?"#fff":F.purple}}>
+                  {already?"✓ ":""}{c.name}
                 </button>
               );
             })}
+            {sessions.length>0&&hasWorkouts<sessions.length&&(
+              <button className="nbtn" onClick={generateAll} style={{padding:"7px 14px",borderRadius:100,fontSize:13,fontWeight:600,border:"none",background:F.orange,color:"#fff",marginLeft:"auto"}}>
+                ⚡ Generate All
+              </button>
+            )}
           </div>
         )}
       </div>
 
       {sessions.length===0?(
-        <EmptySlate icon="◉" title="No sessions today" body={clients.length===0?"Go to Clients to add your roster first, then sync your calendar.":"Sync your calendar above or use + ADD to add sessions manually."}/>
+        <EmptySlate icon="🏋️" title="No sessions today" body={clients.length===0?"Add clients first, then sync your calendar.":"Sync your calendar or tap a client name above."}/>
       ):(
-        <div style={{display:"flex",flexDirection:"column",gap:28}}>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
           {sessions.map((s,i)=>{
             const client=matchClient(s.clientName);
             const lv=LEVEL_META[client?.level||"medium"];
             const workout=workouts[s.clientName];
             const isGen=generating[s.clientName];
-            const pastCount=(history[s.clientName]||[]).length;
             const sections=workout?parseSections(workout):[];
+            const iconColors=["#8968CD","#E05A3A","#E09B2A","#3A8EE0","#3AB87A"];
+            const iconBg=iconColors[i%iconColors.length];
             return (
-              <div key={i} className="card-enter print-card" style={{background:"linear-gradient(150deg,#111827 0%,#0d1117 100%)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:20,overflow:"hidden",boxShadow:"0 2px 0 rgba(255,255,255,0.04) inset,0 20px 60px rgba(0,0,0,0.35)"}}>
-                <div style={{height:2,background:`linear-gradient(90deg,${lv.accent},${lv.accent}55,transparent)`}}/>
-                <div style={{padding:"26px 28px 22px",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:16}}>
+              <div key={i} className="fe print-card" style={{background:"#252525",borderRadius:16,overflow:"hidden"}}>
+                {/* Row header */}
+                <div style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px"}}>
+                  <div style={{width:44,height:44,borderRadius:12,background:iconBg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:22}}>🏃</div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,flexWrap:"wrap"}}>
-                      <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,letterSpacing:"0.14em",padding:"3px 9px",borderRadius:100,background:lv.glow,border:`1px solid ${lv.accent}44`,color:lv.accent}}>{lv.short}</span>
-                      {s.time&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#374151"}}>{s.time}</span>}
-                      {s.source&&<span style={{fontSize:10,color:"#374151"}}>{s.source==="apple"?"🍎 Apple":"🗓 Google"}</span>}
-                      {pastCount>0&&<span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#1f2937"}}>↑ {pastCount} prev</span>}
-                      {client?.avoid?.trim()&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:100,background:"rgba(127,29,29,0.2)",border:"1px solid rgba(127,29,29,0.3)",color:"#7f1d1d"}}>⛔ avoid list</span>}
+                    <div style={{fontSize:16,fontWeight:700,color:"#fff"}}>{s.clientName}</div>
+                    <div style={{fontSize:13,color:"#888",marginTop:1}}>
+                      {s.time?`${s.time} · `:""}{lv.label}
+                      {client?.equipment?.length?" · "+client.equipment.slice(0,2).join(", "):""}
                     </div>
-                    <h2 style={{fontFamily:"'DM Serif Display',serif",fontSize:30,fontWeight:400,color:"#f9fafb",letterSpacing:"-0.01em",lineHeight:1,marginBottom:8}}>{s.clientName}</h2>
-                    {client?.equipment?.length>0&&<p style={{fontSize:12,color:"#374151",lineHeight:1.5}}>{client.equipment.join("  ·  ")}</p>}
                   </div>
-                  <div className="no-print" style={{display:"flex",gap:8,flexShrink:0,flexWrap:"wrap",justifyContent:"flex-end"}}>
-                    {!workout&&!isGen&&<ActionBtn onClick={()=>generate(s.clientName)}>⚡  Generate</ActionBtn>}
-                    {isGen&&<div style={{padding:"10px 16px",borderRadius:10,background:"rgba(249,115,22,0.06)",border:"1px solid rgba(249,115,22,0.15)",color:"#f97316",fontSize:12,fontFamily:"'DM Mono',monospace",display:"flex",alignItems:"center",gap:8}}><span style={{animation:"pulse 1.4s infinite",width:6,height:6,borderRadius:"50%",background:"#f97316",display:"inline-block"}}/>Building…</div>}
-                    {workout&&!isGen&&<><ActionBtn onClick={()=>generate(s.clientName)} secondary small>↺ Redo</ActionBtn><ActionBtn onClick={()=>shareCard(s.clientName)} secondary small>{sharePopup===s.clientName?"✓ Copied!":"⎘ Share"}</ActionBtn></>}
-                    <button onClick={()=>{ const ns=sessions.filter((_,j)=>j!==i); const nw={...workouts}; delete nw[s.clientName]; saveToday({...todayData,sessions:ns,workouts:nw}); }} style={{width:30,height:30,borderRadius:"50%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",color:"#374151",cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+                  <div className="no-print" style={{display:"flex",gap:8,alignItems:"center"}}>
+                    {!workout&&!isGen&&(
+                      <button className="abtn" onClick={()=>generate(s.clientName)} style={{height:36,padding:"0 16px",borderRadius:100,border:"none",background:F.orange,color:"#fff",fontSize:13,fontWeight:700}}>
+                        ⚡ Generate
+                      </button>
+                    )}
+                    {isGen&&<span style={{fontSize:13,color:"#888",animation:"pulse 1.4s infinite"}}>Building…</span>}
+                    {workout&&!isGen&&(
+                      <button className="nbtn" onClick={()=>generate(s.clientName)} style={{width:36,height:36,borderRadius:18,border:"none",background:"#333",color:"#aaa",fontSize:14}}>↺</button>
+                    )}
+                    {workout&&!isGen&&(
+                      <button className="nbtn" onClick={()=>shareCard(s.clientName)} style={{width:36,height:36,borderRadius:18,border:"none",background:"#333",color:"#aaa",fontSize:14}}>
+                        {sharePopup===s.clientName?"✓":"⎘"}
+                      </button>
+                    )}
+                    <button className="nbtn" onClick={()=>{ const ns=sessions.filter((_,j)=>j!==i); const nw={...workouts}; delete nw[s.clientName]; saveToday({...todayData,sessions:ns,workouts:nw}); }} style={{width:36,height:36,borderRadius:18,border:"none",background:"#333",color:"#888",fontSize:16}}>×</button>
                   </div>
                 </div>
+
+                {/* Workout content */}
                 {workout&&!isGen&&(
-                  <div style={{padding:"0 28px 28px"}}>
-                    <div style={{height:1,background:"linear-gradient(90deg,rgba(255,255,255,0.07),transparent)",marginBottom:24}}/>
-                    <div style={{display:"flex",flexDirection:"column",gap:0}}>
-                      {sections.map((sec,si)=>{
-                        const isNotes=sec.title.toLowerCase().includes("coach")||sec.title.toLowerCase().includes("note");
-                        return (
-                          <div key={si} style={{display:"grid",gridTemplateColumns:"150px 1fr",gap:16,padding:"14px 0",borderBottom:si<sections.length-1?"1px solid rgba(255,255,255,0.035)":"none"}}>
-                            <div style={{paddingTop:2}}>
-                              <div style={{fontFamily:"'DM Mono',monospace",fontSize:9,letterSpacing:"0.14em",color:isNotes?lv.accent:"#374151",fontWeight:500}}>{sec.title.replace(/\(.*?\)/,"").trim().toUpperCase()}</div>
-                              {sec.title.match(/\((.+?)\)/)&&<div style={{fontSize:10,color:"#1f2937",fontFamily:"'DM Mono',monospace",marginTop:3}}>{sec.title.match(/\((.+?)\)/)[1]}</div>}
-                            </div>
-                            <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                              {sec.lines.map((line,li)=>{
-                                if(!line.trim())return null;
-                                const isExercise=/sets|reps|×|x\s*\d|@\s*\d|rounds|AMRAP|min\s|:\s*\d/i.test(line);
-                                const clean=line.replace(/^\s*[-•–·]\s*/,"").replace(/^\s*[A-Z]\d+\.\s*/,"").trim();
-                                if(!clean)return null;
-                                return (
-                                  <div key={li} style={{display:"flex",alignItems:"baseline",gap:8,padding:isExercise?"8px 10px":"3px 0",background:isExercise?"rgba(255,255,255,0.018)":"transparent",borderRadius:isExercise?7:0,borderLeft:isExercise?`2px solid ${lv.accent}55`:"none",paddingLeft:isExercise?12:0}}>
-                                    {isExercise&&<div style={{width:4,height:4,borderRadius:2,background:lv.accent,flexShrink:0,marginTop:2,opacity:0.6}}/>}
-                                    <span style={{fontSize:13.5,lineHeight:1.65,color:isNotes?"#6b7280":isExercise?"#e5e7eb":"#9ca3af",fontStyle:isNotes?"italic":"normal",fontWeight:isExercise?400:300}}>{clean}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <RegenRow onRegen={note=>generate(s.clientName,note)} accent={lv.accent}/>
+                  <div style={{borderTop:"1px solid #1a1a1a",padding:"16px 16px 4px"}}>
+                    {sections.map((sec,si)=>{
+                      const isNotes=sec.title.toLowerCase().includes("coach")||sec.title.toLowerCase().includes("note");
+                      return (
+                        <div key={si} style={{marginBottom:16}}>
+                          <p style={{fontSize:11,fontWeight:700,color:isNotes?iconBg:"#555",letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:8}}>{sec.title.replace(/\(.*?\)/,"").trim()}</p>
+                          {sec.lines.map((line,li)=>{
+                            if(!line.trim())return null;
+                            const isExercise=/sets|reps|×|x\s*\d|@\s*\d|rounds|AMRAP|min\s/i.test(line);
+                            const clean=line.replace(/^\s*[-•–·]\s*/,"").replace(/^\s*[A-Z]\d+\.\s*/,"").trim();
+                            if(!clean)return null;
+                            return (
+                              <div key={li} style={{display:"flex",alignItems:"center",gap:10,padding:isExercise?"10px 12px":"4px 0",background:isExercise?"#2e2e2e":"transparent",borderRadius:isExercise?10:0,marginBottom:isExercise?6:0}}>
+                                {isExercise&&<div style={{width:3,height:3,borderRadius:2,background:iconBg,flexShrink:0}}/>}
+                                <span style={{fontSize:14,lineHeight:1.55,color:isNotes?"#888":isExercise?"#f0f0f0":"#aaa",fontStyle:isNotes?"italic":"normal",fontWeight:isExercise?500:400}}>{clean}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                    <RegenRow onRegen={note=>generate(s.clientName,note)}/>
                   </div>
                 )}
+
+                {/* Shimmer skeleton */}
                 {isGen&&(
-                  <div style={{padding:"0 28px 28px"}}>
-                    <div style={{height:1,background:"rgba(255,255,255,0.05)",marginBottom:24}}/>
-                    {[80,100,60,90].map((w,n)=>(
-                      <div key={n} style={{display:"grid",gridTemplateColumns:"150px 1fr",gap:16,paddingBottom:18,marginBottom:18,borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
-                        <div style={{height:9,borderRadius:4,background:"rgba(255,255,255,0.04)",width:"60%"}}/>
-                        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                          {[w,w-20,w-10].map((pw,m)=><div key={m} style={{height:10,borderRadius:4,width:`${pw}%`,background:"linear-gradient(90deg,rgba(255,255,255,0.03) 25%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.03) 75%)",backgroundSize:"200% 100%",animation:"shimmer 1.8s infinite"}}/>)}
-                        </div>
-                      </div>
+                  <div style={{padding:"0 16px 16px",borderTop:"1px solid #1a1a1a",paddingTop:16}}>
+                    {[90,70,80,55].map((w,n)=>(
+                      <div key={n} style={{height:14,borderRadius:7,width:`${w}%`,marginBottom:10,background:"linear-gradient(90deg,#2a2a2a 25%,#333 50%,#2a2a2a 75%)",backgroundSize:"200% 100%",animation:"shimmer 1.6s infinite"}}/>
                     ))}
                   </div>
                 )}
@@ -557,16 +600,16 @@ Every exercise: name, sets×reps, load/intensity, rest. Sound like a real coach.
   );
 }
 
-function RegenRow({onRegen,accent}) {
+function RegenRow({onRegen}) {
   const [note,setNote]=useState(""); const [open,setOpen]=useState(false);
   return (
-    <div className="no-print" style={{marginTop:22}}>
-      {!open&&<button onClick={()=>setOpen(true)} style={{fontSize:12,color:"#374151",background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",padding:0}}>+ Regenerate with instructions</button>}
+    <div className="no-print" style={{marginBottom:12}}>
+      {!open&&<button className="nbtn" onClick={()=>setOpen(true)} style={{fontSize:13,color:"#555",background:"none",border:"none",padding:0}}>+ Add instructions and regenerate</button>}
       {open&&(
-        <div style={{display:"flex",gap:10,alignItems:"center"}}>
-          <input value={note} onChange={e=>setNote(e.target.value)} placeholder="e.g. posterior chain focus, 40 min cap, no running…" onKeyDown={e=>{ if(e.key==="Enter"){onRegen(note);setOpen(false);setNote("");} }} style={{flex:1,...INP,fontSize:12}}/>
-          <ActionBtn small onClick={()=>{onRegen(note);setOpen(false);setNote("");}}>↺ Redo</ActionBtn>
-          <button onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:"#374151",cursor:"pointer",fontSize:18}}>×</button>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <input value={note} onChange={e=>setNote(e.target.value)} placeholder="e.g. posterior chain focus, 40 min cap…" onKeyDown={e=>{ if(e.key==="Enter"){onRegen(note);setOpen(false);setNote("");} }} style={{flex:1,...INP,fontSize:14}}/>
+          <button className="abtn" onClick={()=>{onRegen(note);setOpen(false);setNote("");}} style={{height:44,padding:"0 16px",borderRadius:12,border:"none",background:F.orange,color:"#fff",fontWeight:700,fontSize:14}}>↺</button>
+          <button className="nbtn" onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:"#555",fontSize:20}}>×</button>
         </div>
       )}
     </div>
@@ -608,9 +651,9 @@ function ManageView({clients,saveClients,notify}) {
   return (
     <div>
       <PageHeader title="Clients" subtitle="All client details are saved permanently and used to build every workout."/>
-      <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:28,alignItems:"start"}}>
-        <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:16,padding:26,position:"sticky",top:74}}>
-          <p style={{fontFamily:"'DM Mono',monospace",fontSize:10,letterSpacing:"0.14em",color:"#374151",marginBottom:18,display:"flex",justifyContent:"space-between"}}>
+      <div style={{display:"flex",flexDirection:"column",gap:20}}>
+        <div style={{background:"#252525",borderRadius:16,padding:20}}>
+          <p style={{fontSize:10,letterSpacing:"0.14em",color:"#555",marginBottom:18,display:"flex",justifyContent:"space-between"}}>
             <span>{editIdx!==null?"EDIT CLIENT":"NEW CLIENT"}</span>
             <span style={{color:"#14532d"}}>● AUTO-SAVED</span>
           </p>
@@ -618,13 +661,13 @@ function ManageView({clients,saveClients,notify}) {
           <FormField label="Fitness Level">
             <div style={{display:"flex",gap:8}}>
               {Object.entries(LEVEL_META).map(([k,v])=>(
-                <button key={k} onClick={()=>setForm(p=>({...p,level:k}))} style={{flex:1,padding:"8px 4px",borderRadius:8,cursor:"pointer",fontFamily:"'DM Mono',monospace",fontWeight:500,letterSpacing:"0.1em",fontSize:11,border:`1px solid ${form.level===k?v.accent+"66":"rgba(255,255,255,0.06)"}`,background:form.level===k?v.glow:"transparent",color:form.level===k?v.accent:"#4b5563"}}>{v.short}</button>
+                <button key={k} onClick={()=>setForm(p=>({...p,level:k}))} style={{flex:1,padding:"8px 4px",borderRadius:8,cursor:"pointer",fontWeight:500,letterSpacing:"0.1em",fontSize:11,border:`1px solid ${form.level===k?v.accent+"66":"rgba(255,255,255,0.06)"}`,background:form.level===k?v.glow:"transparent",color:form.level===k?v.accent:"#888"}}>{v.short}</button>
               ))}
             </div>
           </FormField>
           <FormField label="Equipment">
             <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-              {EQUIPMENT_OPTIONS.map(eq=>{ const on=form.equipment.includes(eq); return <button key={eq} onClick={()=>toggleEquip(eq)} style={{padding:"4px 10px",borderRadius:100,fontSize:11,cursor:"pointer",border:`1px solid ${on?"#60a5fa44":"rgba(255,255,255,0.06)"}`,background:on?"rgba(96,165,250,0.07)":"transparent",color:on?"#93c5fd":"#4b5563"}}>{eq}</button>; })}
+              {EQUIPMENT_OPTIONS.map(eq=>{ const on=form.equipment.includes(eq); return <button key={eq} onClick={()=>toggleEquip(eq)} style={{padding:"4px 10px",borderRadius:100,fontSize:11,cursor:"pointer",border:`1px solid ${on?"#60a5fa44":"rgba(255,255,255,0.06)"}`,background:on?"rgba(96,165,250,0.07)":"transparent",color:on?"#93c5fd":"#888"}}>{eq}</button>; })}
             </div>
           </FormField>
           <FormField label="Notes / Goals / Injuries">
@@ -637,7 +680,7 @@ function ManageView({clients,saveClients,notify}) {
           <FormField label="📍 Training Space Photos">
             <input ref={spaceRef} type="file" accept="image/*" multiple onChange={uploadSpace} style={{display:"none"}}/>
             <ActionBtn secondary small loading={spaceLoading} onClick={()=>spaceRef.current?.click()}>{spaceLoading?"Analyzing…":"Upload Photos"}</ActionBtn>
-            {form.spaceImages?.length>0&&<div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{form.spaceImages.map((img,i)=><div key={i} style={{position:"relative"}}><img src={img.preview} alt="" style={{width:60,height:60,objectFit:"cover",borderRadius:8,border:"1px solid rgba(255,255,255,0.08)"}}/><button onClick={()=>setForm(p=>({...p,spaceImages:p.spaceImages.filter((_,j)=>j!==i)}))} style={{position:"absolute",top:-5,right:-5,width:16,height:16,borderRadius:"50%",background:"#1f0a0a",border:"1px solid #7f1d1d",color:"#f87171",cursor:"pointer",fontSize:9,display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>×</button></div>)}</div>}
+            {form.spaceImages?.length>0&&<div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>{form.spaceImages.map((img,i)=><div key={i} style={{position:"relative"}}><img src={img.preview} alt="" style={{width:60,height:60,objectFit:"cover",borderRadius:8,}}/><button onClick={()=>setForm(p=>({...p,spaceImages:p.spaceImages.filter((_,j)=>j!==i)}))} style={{position:"absolute",top:-5,right:-5,width:16,height:16,borderRadius:"50%",background:"#1f0a0a",border:"1px solid #7f1d1d",color:"#f87171",cursor:"pointer",fontSize:9,display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>×</button></div>)}</div>}
             {form.spaceAnalysis&&<p style={{marginTop:10,fontSize:11,color:"#7dd3fc",lineHeight:1.6,padding:"10px 12px",background:"rgba(56,189,248,0.04)",border:"1px solid rgba(56,189,248,0.12)",borderRadius:8}}>{form.spaceAnalysis}</p>}
           </FormField>
           <div style={{display:"flex",gap:10}}>
@@ -646,20 +689,20 @@ function ManageView({clients,saveClients,notify}) {
           </div>
         </div>
         <div>
-          <p style={{fontFamily:"'DM Mono',monospace",fontSize:10,letterSpacing:"0.14em",color:"#374151",marginBottom:16}}>ROSTER — {clients.length} CLIENTS</p>
+          <p style={{fontSize:10,letterSpacing:"0.14em",color:"#555",marginBottom:16}}>ROSTER — {clients.length} CLIENTS</p>
           {clients.length===0?<EmptySlate icon="◈" title="No clients yet" body="Add your first client using the form."/>:(
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {clients.map((c,i)=>{ const lv=LEVEL_META[c.level||"medium"]; const avoids=c.avoid?.split(/[\n,]+/).map(x=>x.trim()).filter(Boolean)||[]; return (
-                <div key={i} style={{background:"#111827",border:`1px solid ${lv.accent}22`,borderRadius:14,padding:"18px 20px"}}>
+                <div key={i} style={{background:"#252525",border:`1px solid ${lv.accent}22`,borderRadius:14,padding:"18px 20px"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
                     <div style={{flex:1}}>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6,flexWrap:"wrap"}}>
-                        <h3 style={{fontFamily:"'DM Serif Display',serif",fontSize:19,fontWeight:400,color:"#f9fafb"}}>{c.name}</h3>
+                        <h3 style={{fontSize:19,fontWeight:400,color:"#fff"}}>{c.name}</h3>
                         <span style={{padding:"2px 9px",borderRadius:100,background:lv.glow,border:`1px solid ${lv.accent}44`,color:lv.accent,fontSize:10,fontFamily:"'DM Mono',monospace"}}>{lv.short}</span>
                         {avoids.length>0&&<span style={{fontSize:10,color:"#7f1d1d",fontFamily:"'DM Mono',monospace"}}>⛔ {avoids.length}</span>}
                       </div>
-                      {c.equipment?.length>0&&<p style={{fontSize:12,color:"#374151",lineHeight:1.5}}>{c.equipment.join("  ·  ")}</p>}
-                      {c.notes&&<p style={{marginTop:5,fontSize:12,color:"#4b5563",fontStyle:"italic",lineHeight:1.5}}>{c.notes}</p>}
+                      {c.equipment?.length>0&&<p style={{fontSize:12,color:"#555",lineHeight:1.5}}>{c.equipment.join("  ·  ")}</p>}
+                      {c.notes&&<p style={{marginTop:5,fontSize:12,color:"#888",fontStyle:"italic",lineHeight:1.5}}>{c.notes}</p>}
                       {avoids.length>0&&<div style={{marginTop:7,display:"flex",flexWrap:"wrap",gap:4}}>{avoids.map((x,j)=><span key={j} style={{padding:"3px 9px",borderRadius:100,background:"rgba(239,68,68,0.06)",border:"1px solid rgba(239,68,68,0.15)",color:"#f87171",fontSize:11}}>⛔ {x}</span>)}</div>}
                     </div>
                     <div style={{display:"flex",gap:8}}>
@@ -715,12 +758,12 @@ function LibraryView({programs,savePrograms,coachStyle,saveStyle,notify}) {
   return (
     <div>
       <PageHeader title="Program Library" subtitle="Feed the AI your programs — the more it sees, the better it replicates your coaching style."/>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 280px",gap:24,alignItems:"start"}}>
+      <div style={{display:"flex",flexDirection:"column",gap:16}}>
         <div>
-          <div style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:16,padding:22,marginBottom:16}}>
-            <p style={{fontFamily:"'DM Mono',monospace",fontSize:10,letterSpacing:"0.14em",color:"#374151",marginBottom:14}}>PASTE PROGRAM</p>
+          <div style={{background:"#252525",borderRadius:16,padding:20,marginBottom:16}}>
+            <p style={{fontSize:10,letterSpacing:"0.14em",color:"#555",marginBottom:14}}>PASTE PROGRAM</p>
             <input value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} placeholder="Program name" style={{...INP,marginBottom:10}}/>
-            <textarea value={form.content} onChange={e=>setForm(p=>({...p,content:e.target.value}))} rows={8} placeholder={"A1. Back Squat  5×5 @ 80%  — 3:00 rest\nA2. Romanian DL  4×8  — 2:00 rest\n\nConditioning: 4 rounds\n  400m Run / 20 KB Swings / 15 Box Jumps"} style={{...INP,resize:"vertical",lineHeight:1.65,fontFamily:"'DM Mono',monospace",fontSize:12}}/>
+            <textarea value={form.content} onChange={e=>setForm(p=>({...p,content:e.target.value}))} rows={8} placeholder={"A1. Back Squat  5×5 @ 80%  — 3:00 rest\nA2. Romanian DL  4×8  — 2:00 rest\n\nConditioning: 4 rounds\n  400m Run / 20 KB Swings / 15 Box Jumps"} style={{...INP,resize:"vertical",lineHeight:1.65,fontSize:12}}/>
             <div style={{display:"flex",gap:10,marginTop:12}}>
               <ActionBtn onClick={add}>Add</ActionBtn>
               <input ref={fileRef} type="file" accept=".pdf,.txt,.md" onChange={uploadFile} style={{display:"none"}}/>
@@ -730,23 +773,23 @@ function LibraryView({programs,savePrograms,coachStyle,saveStyle,notify}) {
           {programs.length===0?<EmptySlate icon="⊞" title="Library empty" body="Paste or upload programs above."/>:(
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {programs.map((p,i)=>(
-                <div key={i} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,padding:"16px 18px"}}>
+                <div key={i} style={{background:"#252525",borderRadius:12,padding:"16px 18px"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                    <h4 style={{fontFamily:"'DM Serif Display',serif",fontSize:17,fontWeight:400,color:"#f9fafb"}}>{p.name}</h4>
+                    <h4 style={{fontSize:17,fontWeight:400,color:"#fff"}}>{p.name}</h4>
                     <button onClick={()=>del(i)} style={{background:"rgba(127,29,29,0.1)",border:"1px solid rgba(127,29,29,0.2)",borderRadius:6,color:"#f87171",cursor:"pointer",fontSize:11,padding:"3px 10px",fontFamily:"'DM Mono',monospace"}}>Remove</button>
                   </div>
-                  <pre style={{whiteSpace:"pre-wrap",fontFamily:"'DM Mono',monospace",fontSize:11,lineHeight:1.7,color:"#374151",margin:0,maxHeight:130,overflow:"auto"}}>{p.content}</pre>
+                  <pre style={{whiteSpace:"pre-wrap",fontSize:11,lineHeight:1.7,color:"#555",margin:0,maxHeight:130,overflow:"auto"}}>{p.content}</pre>
                 </div>
               ))}
             </div>
           )}
         </div>
         <div style={{position:"sticky",top:74}}>
-          <div style={{background:"#111827",border:`1px solid ${coachStyle?"rgba(110,231,183,0.2)":"rgba(255,255,255,0.05)"}`,borderRadius:14,padding:20}}>
-            <p style={{fontFamily:"'DM Mono',monospace",fontSize:10,letterSpacing:"0.14em",color:coachStyle?"#6ee7b7":"#374151",marginBottom:12}}>{coachStyle?"◉ STYLE LEARNED":"◎ NO STYLE YET"}</p>
+          <div style={{background:"#252525",border:`1px solid ${coachStyle?"rgba(110,231,183,0.2)":"rgba(255,255,255,0.05)"}`,borderRadius:14,padding:20}}>
+            <p style={{fontSize:10,letterSpacing:"0.14em",color:coachStyle?"#6ee7b7":"#555",marginBottom:12}}>{coachStyle?"◉ STYLE LEARNED":"◎ NO STYLE YET"}</p>
             {programs.length>0&&<ActionBtn onClick={analyze} loading={analyzing} style={{marginBottom:14,width:"100%"}}>{analyzing?"Analyzing…":"Analyze My Style"}</ActionBtn>}
-            {coachStyle?<p style={{fontSize:12,color:"#6ee7b7",lineHeight:1.7,maxHeight:340,overflow:"auto"}}>{coachStyle}</p>:<p style={{fontSize:12,color:"#374151",lineHeight:1.6}}>Add programs then analyze — AI learns your style and replicates it for every generated workout.</p>}
-            {coachStyle&&<button onClick={()=>saveStyle("")} style={{marginTop:12,background:"none",border:"none",color:"#374151",cursor:"pointer",fontSize:11,fontFamily:"'DM Mono',monospace"}}>Clear ×</button>}
+            {coachStyle?<p style={{fontSize:12,color:"#6ee7b7",lineHeight:1.7,maxHeight:340,overflow:"auto"}}>{coachStyle}</p>:<p style={{fontSize:12,color:"#555",lineHeight:1.6}}>Add programs then analyze — AI learns your style and replicates it for every generated workout.</p>}
+            {coachStyle&&<button onClick={()=>saveStyle("")} style={{marginTop:12,background:"none",border:"none",color:"#555",cursor:"pointer",fontSize:11,fontFamily:"'DM Mono',monospace"}}>Clear ×</button>}
           </div>
         </div>
       </div>
@@ -767,7 +810,7 @@ function HistoryView({clients,history}) {
         <div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:32}}>
             {clients.map(c=>{ const count=(history[c.name]||[]).length; const lv=LEVEL_META[c.level||"medium"]; return (
-              <button key={c.name} onClick={()=>setSel(c.name)} style={{padding:"8px 18px",borderRadius:100,fontSize:13,cursor:"pointer",fontWeight:500,border:`1px solid ${sel===c.name?lv.accent+"66":"rgba(255,255,255,0.06)"}`,background:sel===c.name?lv.glow:"transparent",color:sel===c.name?lv.accent:"#6b7280"}}>
+              <button key={c.name} onClick={()=>setSel(c.name)} style={{padding:"8px 18px",borderRadius:100,fontSize:13,cursor:"pointer",fontWeight:500,border:`1px solid ${sel===c.name?lv.accent+"66":"rgba(255,255,255,0.06)"}`,background:sel===c.name?lv.glow:"transparent",color:sel===c.name?lv.accent:"#888"}}>
                 {c.name}{count>0&&<span style={{marginLeft:8,fontSize:10,opacity:0.5,fontFamily:"'DM Mono',monospace"}}>{count}</span>}
               </button>
             );})}
@@ -778,14 +821,14 @@ function HistoryView({clients,history}) {
               {ch.map((entry,i)=>{
                 const d=new Date(entry.date+"T12:00:00");
                 return (
-                  <details key={i} open={i===0} style={{background:"#111827",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,overflow:"hidden"}}>
+                  <details key={i} open={i===0} style={{background:"#252525",borderRadius:14,overflow:"hidden"}}>
                     <summary style={{padding:"18px 22px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,listStyle:"none"}}>
-                      <span style={{fontFamily:"'DM Mono',monospace",fontSize:10,color:"#374151",minWidth:24}}>#{ch.length-i}</span>
-                      <span style={{fontFamily:"'DM Serif Display',serif",fontSize:17,color:"#f9fafb",flex:1}}>{d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}</span>
-                      <span style={{fontSize:11,color:"#374151",fontFamily:"'DM Mono',monospace"}}>{parseSections(entry.workout).length} sections</span>
+                      <span style={{fontSize:10,color:"#555",minWidth:24}}>#{ch.length-i}</span>
+                      <span style={{fontSize:17,color:"#fff",flex:1}}>{d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}</span>
+                      <span style={{fontSize:11,color:"#555",fontFamily:"'DM Mono',monospace"}}>{parseSections(entry.workout).length} sections</span>
                     </summary>
                     <div style={{padding:"0 22px 22px",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
-                      <pre style={{whiteSpace:"pre-wrap",fontFamily:"'DM Sans',sans-serif",fontSize:13,lineHeight:1.75,color:"#9ca3af",margin:0,paddingTop:16}}>{entry.workout}</pre>
+                      <pre style={{whiteSpace:"pre-wrap",fontSize:13,lineHeight:1.75,color:"#aaa",margin:0,paddingTop:16}}>{entry.workout}</pre>
                     </div>
                   </details>
                 );
@@ -801,21 +844,33 @@ function HistoryView({clients,history}) {
 /* ═══════════════════════════════════════════════════════════════
    SHARED COMPONENTS + STYLE TOKENS
 ═══════════════════════════════════════════════════════════════ */
-const INP={width:"100%",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:8,padding:"10px 14px",color:"#e5e7eb",fontSize:13,lineHeight:1.5};
-const LBL={display:"block",fontSize:11,fontFamily:"'DM Mono',monospace",letterSpacing:"0.1em",color:"#6b7280",marginBottom:4};
+const INP={width:"100%",background:"#2e2e2e",border:"none",borderRadius:12,padding:"12px 16px",color:"#fff",fontSize:15,lineHeight:1.5};
+const LBL={display:"block",fontSize:12,fontWeight:600,color:"#888",marginBottom:8,letterSpacing:"0.01em"};
+
+function SectionHeader({icon,title,sub}) {
+  return (
+    <div style={{marginBottom:16}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+        {icon&&<span style={{fontSize:18}}>{icon}</span>}
+        <span style={{fontSize:22,fontWeight:700,color:"#fff",letterSpacing:"-0.3px"}}>{title}</span>
+      </div>
+      {sub&&<p style={{fontSize:14,color:"#888",marginLeft:icon?26:0}}>{sub}</p>}
+    </div>
+  );
+}
 
 function PageHeader({title,subtitle}) {
   return (
-    <div style={{marginBottom:38}}>
-      <h1 style={{fontFamily:"'DM Serif Display',serif",fontSize:34,fontWeight:400,color:"#f9fafb",letterSpacing:"-0.01em",lineHeight:1.1}}>{title}</h1>
-      {subtitle&&<p style={{marginTop:10,color:"#6b7280",fontSize:14,lineHeight:1.65,maxWidth:500}}>{subtitle}</p>}
+    <div style={{marginBottom:28}}>
+      <h1 style={{fontSize:34,fontWeight:700,color:"#fff",letterSpacing:"-0.5px",lineHeight:1.1}}>{title}</h1>
+      {subtitle&&<p style={{marginTop:8,color:"#888",fontSize:14,lineHeight:1.6}}>{subtitle}</p>}
     </div>
   );
 }
 
 function ActionBtn({children,onClick,secondary=false,small=false,loading=false,style={}}) {
   return (
-    <button className="abtn" onClick={loading?undefined:onClick} style={{padding:small?"7px 14px":"10px 20px",borderRadius:10,border:"1px solid",fontSize:small?12:13,fontWeight:500,cursor:loading?"default":"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap",...(secondary?{background:"rgba(255,255,255,0.04)",borderColor:"rgba(255,255,255,0.08)",color:"#9ca3af"}:{background:"#f97316",borderColor:"#f97316",color:"#fff",boxShadow:"0 0 18px rgba(249,115,22,0.2)"}),transition:"all 0.15s",...style}}>
+    <button className="abtn" onClick={loading?undefined:onClick} style={{padding:small?"9px 18px":"12px 22px",borderRadius:100,border:"none",fontSize:small?13:15,fontWeight:600,display:"inline-flex",alignItems:"center",gap:7,whiteSpace:"nowrap",...(secondary?{background:"#2e2e2e",color:"#aaa"}:{background:F.orange,color:"#fff"}),transition:"opacity 0.15s,transform 0.15s",...style}}>
       {loading?"…":children}
     </button>
   );
@@ -823,19 +878,36 @@ function ActionBtn({children,onClick,secondary=false,small=false,loading=false,s
 
 function FormField({label,children}) {
   return (
-    <div style={{marginBottom:16}}>
-      <label style={{display:"block",fontSize:10,fontFamily:"'DM Mono',monospace",letterSpacing:"0.12em",color:"#4b5563",marginBottom:7}}>{label.toUpperCase()}</label>
+    <div style={{marginBottom:18}}>
+      <label style={{display:"block",fontSize:12,fontWeight:600,color:"#888",marginBottom:8}}>{label}</label>
       {children}
+    </div>
+  );
+}
+
+function FCard({children,style={}}) {
+  return <div style={{background:"#252525",borderRadius:16,overflow:"hidden",...style}}>{children}</div>;
+}
+
+function FRow({left,title,sub,right,onClick}) {
+  return (
+    <div onClick={onClick} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#252525",borderRadius:14,cursor:onClick?"pointer":"default"}}>
+      {left&&<div style={{width:44,height:44,borderRadius:12,background:F.purple,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:22}}>{left}</div>}
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:16,fontWeight:600,color:"#fff",lineHeight:1.2}}>{title}</div>
+        {sub&&<div style={{fontSize:13,color:"#888",marginTop:2}}>{sub}</div>}
+      </div>
+      {right}
     </div>
   );
 }
 
 function EmptySlate({icon,title,body}) {
   return (
-    <div style={{textAlign:"center",padding:"64px 24px"}}>
-      <div style={{fontSize:34,marginBottom:16,opacity:0.15,fontFamily:"'DM Serif Display',serif"}}>{icon}</div>
-      <h3 style={{fontFamily:"'DM Serif Display',serif",fontSize:21,fontWeight:400,color:"#6b7280",marginBottom:10}}>{title}</h3>
-      <p style={{fontSize:13,color:"#374151",maxWidth:340,margin:"0 auto",lineHeight:1.65}}>{body}</p>
+    <div style={{textAlign:"center",padding:"60px 24px"}}>
+      <div style={{fontSize:48,marginBottom:16,opacity:0.2}}>{icon}</div>
+      <h3 style={{fontSize:20,fontWeight:700,color:"#555",marginBottom:8}}>{title}</h3>
+      <p style={{fontSize:14,color:"#444",maxWidth:300,margin:"0 auto",lineHeight:1.6}}>{body}</p>
     </div>
   );
 }
