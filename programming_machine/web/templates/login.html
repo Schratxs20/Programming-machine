@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Programming Machine">
+  <meta name="theme-color" content="#111827">
+  <title>Sign in — Programming Machine</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      min-height: 100dvh;
+      background: #111827;
+      display: flex; align-items: center; justify-content: center;
+      padding: max(1.5rem, env(safe-area-inset-top)) 1.5rem max(1.5rem, env(safe-area-inset-bottom));
+    }
+    .login-card { width: 100%; max-width: 400px; border: none; border-radius: 1rem; }
+    .form-control { min-height: 50px; font-size: 1rem; border-radius: .5rem; }
+    .btn-login    { min-height: 50px; font-size: 1rem; font-weight: 600; border-radius: .5rem; background: #f97316; border: none; }
+    .btn-login:hover { background: #ea6c0a; }
+  </style>
+</head>
+<body>
+  <div class="card login-card p-4">
+    <div class="text-center mb-4">
+      <i class="bi bi-lightning-charge-fill" style="font-size:2.8rem;color:#f97316;"></i>
+      <div style="font-size:1.4rem;font-weight:700;margin-top:.5rem;">Programming Machine</div>
+      <div class="text-muted" style="font-size:.9rem;">Strength &amp; Conditioning</div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Username</label>
+        <input type="text" name="username" class="form-control"
+               autocomplete="username" autocapitalize="none" autocorrect="off" autofocus required>
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Password</label>
+        <input type="password" name="password" class="form-control"
+               autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-login w-100 text-white">
+        <i class="bi bi-box-arrow-in-right me-2"></i>Sign in
+      </button>
+    </form>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

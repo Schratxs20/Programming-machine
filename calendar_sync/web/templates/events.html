@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Events – Calendar Sync{% endblock %}
+
+{% block content %}
+<h4 class="fw-semibold mb-4">Events</h4>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label small">Calendar</label>
+        <select name="calendar_id" class="form-select form-select-sm" onchange="this.form.submit()"
+                id="calendar-select">
+          <option value="">Select a calendar...</option>
+          {% for p_name, cal_id, cal_name in providers %}
+            <option value="{{ cal_id }}"
+                    data-provider="{{ p_name }}"
+                    {% if p_name == provider_name and cal_id == calendar_id %}selected{% endif %}>
+              {{ p_name }} / {{ cal_name }}
+            </option>
+          {% endfor %}
+        </select>
+        <!-- Hidden provider field, updated by JS -->
+        <input type="hidden" name="provider" id="provider-input" value="{{ provider_name }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small">Days back</label>
+        <input type="number" name="days_back" class="form-control form-control-sm"
+               value="{{ days_back }}" min="0" max="365">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small">Days ahead</label>
+        <input type="number" name="days_ahead" class="form-control form-control-sm"
+               value="{{ days_ahead }}" min="0" max="730">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-primary btn-sm w-100">
+          <i class="bi bi-search"></i> Load
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if events_data %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span class="fw-semibold">{{ events_data | length }} event(s)</span>
+    <span class="text-muted small">{{ provider_name }} / {{ calendar_id }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Title</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Status</th>
+          <th>Location</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events_data %}
+        <tr>
+          <td>
+            <span class="fw-medium">{{ event.title }}</span>
+            {% if event.all_day %}
+              <span class="badge bg-secondary ms-1" style="font-size:.65rem;">all-day</span>
+            {% endif %}
+          </td>
+          <td class="small text-nowrap">{{ event.start }}</td>
+          <td class="small text-nowrap">{{ event.end }}</td>
+          <td>
+            {% if event.status == 'confirmed' %}
+              <span class="badge bg-success">{{ event.status }}</span>
+            {% elif event.status == 'tentative' %}
+              <span class="badge bg-warning text-dark">{{ event.status }}</span>
+            {% elif event.status == 'cancelled' %}
+              <span class="badge bg-danger">{{ event.status }}</span>
+            {% else %}
+              <span class="badge bg-secondary">{{ event.status }}</span>
+            {% endif %}
+          </td>
+          <td class="small text-muted">{{ event.location or '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% elif provider_name and calendar_id %}
+  <div class="alert alert-info">No events found in this range.</div>
+{% endif %}
+
+<script>
+  document.getElementById('calendar-select').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    document.getElementById('provider-input').value = selected.dataset.provider || '';
+  });
+</script>
+{% endblock %}

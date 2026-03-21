@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Calendars – Calendar Sync{% endblock %}
+
+{% block content %}
+<h4 class="fw-semibold mb-4">Calendars</h4>
+
+{% if config_error %}
+<div class="alert alert-warning">{{ config_error }}</div>
+{% elif not providers_data %}
+<div class="alert alert-info">No providers configured. Check your <a href="{{ url_for('config_view') }}">config</a>.</div>
+{% else %}
+  <div class="row g-3">
+    {% for provider_name, data in providers_data.items() %}
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header d-flex align-items-center gap-2">
+          {% if provider_name == 'google' %}
+            <i class="bi bi-google text-danger"></i>
+          {% elif provider_name == 'outlook' %}
+            <i class="bi bi-microsoft text-primary"></i>
+          {% elif provider_name == 'caldav' %}
+            <i class="bi bi-cloud text-info"></i>
+          {% else %}
+            <i class="bi bi-rss text-warning"></i>
+          {% endif %}
+          <span class="fw-semibold">{{ provider_name | title }}</span>
+        </div>
+        <div class="card-body p-0">
+          {% if data.error %}
+            <div class="p-3 text-danger small"><i class="bi bi-exclamation-circle"></i> {{ data.error }}</div>
+          {% elif data.calendars %}
+            <ul class="list-group list-group-flush">
+              {% for cal in data.calendars %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ cal.name }}</span>
+                <div class="d-flex align-items-center gap-2">
+                  <code class="text-muted small">{{ cal.id }}</code>
+                  <a href="{{ url_for('events', provider=provider_name, calendar_id=cal.id) }}"
+                     class="btn btn-outline-primary btn-sm py-0">
+                    <i class="bi bi-list-ul"></i> Events
+                  </a>
+                </div>
+              </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="p-3 text-muted small mb-0">No calendars found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

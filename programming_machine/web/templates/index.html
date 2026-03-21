@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Today — Programming Machine{% endblock %}
+
+{% block content %}
+
+<!-- Date header -->
+<div class="d-flex align-items-baseline gap-3 mb-1">
+  <h4 class="fw-bold mb-0">{{ day_name }}</h4>
+  <span class="text-muted">{{ today.strftime("%B %-d, %Y") }}</span>
+</div>
+<p class="text-muted small mb-4">Your clients' workouts for today</p>
+
+<!-- Calendar strip (shown only if iCal is configured) -->
+{% if ical_configured %}
+<div class="card mb-4">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i class="bi bi-calendar2-event" style="color:#f97316;"></i>
+      <span class="fw-semibold">Your schedule today</span>
+    </div>
+    {% if cal_events %}
+      {% for event in cal_events %}
+      <div class="cal-event">
+        <div class="cal-event-time">{{ event.time }}</div>
+        <div class="cal-event-title">{{ event.title }}</div>
+        {% if event.location %}<div class="exercise-notes">{{ event.location }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted small mb-0">Nothing on your calendar today.</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Client workout cards -->
+{% if workouts %}
+  {% for w in workouts %}
+  <div class="card workout-card mb-3">
+    <div class="card-header d-flex align-items-center justify-content-between">
+      <div>
+        <i class="bi bi-person-circle me-2"></i>
+        <span class="fw-bold" style="font-size:1.05rem;">{{ w.client.name }}</span>
+      </div>
+      <a href="{{ url_for('program_view', client_id=w.client.id) }}"
+         class="btn btn-sm btn-outline-light" style="min-height:32px;padding:.2rem .7rem;">
+        <i class="bi bi-pencil"></i>
+      </a>
+    </div>
+    <div class="card-body py-2 px-3">
+      {% for ex in w.exercises %}
+      <div class="exercise-row">
+        <div class="exercise-name">{{ ex.name }}</div>
+        <div class="exercise-meta">
+          {% if ex.sets %}{{ ex.sets }} sets{% endif %}
+          {% if ex.reps %} &times; {{ ex.reps }}{% endif %}
+          {% if ex.load %} &nbsp;·&nbsp; {{ ex.load }}{% endif %}
+        </div>
+        {% if ex.notes %}<div class="exercise-notes">{{ ex.notes }}</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+{% elif not workouts %}
+  <div class="card">
+    <div class="card-body text-center py-5">
+      {% if not ical_configured %}
+        <i class="bi bi-moon-stars" style="font-size:2.5rem;color:#d1d5db;"></i>
+        <p class="mt-3 text-muted mb-1 fw-semibold">No workouts scheduled for {{ day_name }}.</p>
+        <p class="text-muted small">
+          Add clients and build their weekly programs under
+          <a href="{{ url_for('clients') }}">Clients</a>.
+        </p>
+      {% else %}
+        <i class="bi bi-moon-stars" style="font-size:2.5rem;color:#d1d5db;"></i>
+        <p class="mt-3 text-muted mb-0 fw-semibold">Rest day — no workouts today.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

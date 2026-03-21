@@ -192,6 +192,25 @@ def _parse_interval(interval: str) -> int:
         return int(interval)
 
 
+@cli.command()
+@click.option("--host", default="127.0.0.1", help="Host to bind to")
+@click.option("--port", "-p", default=5000, help="Port to listen on")
+@click.option("--debug", is_flag=True, help="Enable Flask debug mode")
+@click.pass_context
+def web(ctx, host: str, port: int, debug: bool):
+    """Start the web interface."""
+    try:
+        from .web.app import create_app
+    except ImportError:
+        click.echo("Flask is required for the web interface: pip install flask", err=True)
+        sys.exit(1)
+
+    config_path = ctx.obj["config_path"]
+    app = create_app(config_path=config_path)
+    click.echo(f"Starting web interface at http://{host}:{port}")
+    app.run(host=host, port=port, debug=debug)
+
+
 def main():
     cli(obj={})
 
