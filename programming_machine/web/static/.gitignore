@@ -1,0 +1,3 @@
+# Allow the built frontend to be committed
+!dist/
+!dist/**
