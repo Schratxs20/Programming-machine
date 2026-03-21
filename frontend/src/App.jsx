@@ -349,9 +349,11 @@ function CalendarSettings({calSettings,saveCalSettings,notify}) {
    DAILY VIEW
 ═══════════════════════════════════════════════════════════════ */
 function DailyView({clients,programs,coachStyle,history,todayData,saveToday,calSettings,notify,setView}) {
-  const [syncing,setSyncing]     = useState({google:false,apple:false});
+  const [syncing,setSyncing]       = useState({google:false,apple:false});
   const [generating,setGenerating] = useState({});
   const [sharePopup,setSharePopup] = useState(null);
+  const [selectedDate,setSelectedDate] = useState(TODAY_KEY());
+  const [weekOffset,setWeekOffset]     = useState(0);
 
   const sessions = todayData?.sessions||[];
   const workouts = todayData?.workouts||{};
@@ -442,19 +444,34 @@ Every exercise: name, sets×reps, load/intensity, rest. Sound like a real coach.
   const generateAll = ()=>sessions.forEach(s=>{ if(!workouts[s.clientName])generate(s.clientName); });
 
   const shareCard = async (clientName) => {
-    const text=`${clientName} — ${new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}\n\n${workouts[clientName]}`;
+    const shareDate=isViewingToday?new Date():new Date(selectedDate+"T12:00:00");
+    const text=`${clientName} — ${shareDate.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}\n\n${viewWorkouts[clientName]}`;
     try { await navigator.clipboard.writeText(text); setSharePopup(clientName); setTimeout(()=>setSharePopup(null),2000); } catch {}
   };
 
   const today=new Date();
-  const hasWorkouts=sessions.filter(s=>workouts[s.clientName]).length;
+  const todayKey=TODAY_KEY();
+  const isViewingToday=selectedDate===todayKey;
+
+  // For past dates reconstruct from history; today uses live todayData
+  let viewSessions=sessions, viewWorkouts=workouts;
+  if(!isViewingToday) {
+    const ps=[]; const pw={};
+    for(const [name,entries] of Object.entries(history)) {
+      const e=entries.find(en=>en.date===selectedDate);
+      if(e){ ps.push({clientName:name,time:""}); pw[name]=e.workout; }
+    }
+    viewSessions=ps; viewWorkouts=pw;
+  }
+
+  const hasWorkouts=viewSessions.filter(s=>viewWorkouts[s.clientName]).length;
   const anyEnabled=calSettings.google?.enabled||calSettings.apple?.enabled;
   const bothEnabled=calSettings.google?.enabled&&calSettings.apple?.enabled;
   const isSyncing=syncing.google||syncing.apple;
 
-  // Week strip — 7 days centred on today
+  // Week strip — 7 days offset by weekOffset
   const weekDays=Array.from({length:7},(_,i)=>{
-    const d=new Date(today); d.setDate(today.getDate()-today.getDay()+i);
+    const d=new Date(today); d.setDate(today.getDate()-today.getDay()+i+weekOffset*7);
     return d;
   });
   const DAY_NAMES=["SUN","MON","TUE","WED","THU","FRI","SAT"];
@@ -465,43 +482,64 @@ Every exercise: name, sets×reps, load/intensity, rest. Sound like a real coach.
       <div style={{marginBottom:24}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
           <div>
-            <h1 style={{fontSize:34,fontWeight:700,color:"#fff",letterSpacing:"-0.5px"}}>Home</h1>
-            <p style={{fontSize:15,color:"#888",marginTop:2}}>{today.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</p>
+            <h1 style={{fontSize:34,fontWeight:700,color:"#fff",letterSpacing:"-0.5px"}}>
+              {isViewingToday?"Home":new Date(selectedDate+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric"})}
+            </h1>
+            <p style={{fontSize:15,color:"#888",marginTop:2}}>
+              {isViewingToday
+                ? today.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})
+                : new Date(selectedDate+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"})}
+              {!isViewingToday&&<span style={{marginLeft:8,fontSize:11,color:F.orange,fontWeight:700,letterSpacing:"0.06em"}}>PAST</span>}
+            </p>
           </div>
           <div style={{display:"flex",gap:8}}>
-            {anyEnabled&&(
+            {isViewingToday&&anyEnabled&&(
               <button className="nbtn" onClick={isSyncing?undefined:syncAll} style={{width:42,height:42,borderRadius:21,background:"#252525",border:"none",color:isSyncing?"#555":"#fff",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>
                 {isSyncing?"…":"⟳"}
               </button>
             )}
-            {!anyEnabled&&(
+            {isViewingToday&&!anyEnabled&&(
               <button className="nbtn" onClick={()=>setView("settings")} style={{height:42,padding:"0 16px",borderRadius:21,background:"#252525",border:"none",color:"#888",fontSize:13,fontWeight:600}}>
                 + Calendar
+              </button>
+            )}
+            {!isViewingToday&&(
+              <button className="nbtn" onClick={()=>{setSelectedDate(todayKey);setWeekOffset(0);}} style={{height:42,padding:"0 16px",borderRadius:21,background:"#252525",border:"none",color:F.orange,fontSize:13,fontWeight:600}}>
+                Today
               </button>
             )}
           </div>
         </div>
 
         {/* Week strip */}
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:24}}>
-          {weekDays.map((d,i)=>{
-            const isToday=d.toDateString()===today.toDateString();
-            return (
-              <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
-                <span style={{fontSize:11,fontWeight:600,color:isToday?F.orange:"#555",letterSpacing:"0.04em"}}>{DAY_NAMES[i]}</span>
-                <div style={{width:38,height:38,borderRadius:10,background:isToday?"#333":"transparent",display:"flex",alignItems:"center",justifyContent:"center"}}>
-                  <span style={{fontSize:18,fontWeight:isToday?700:400,color:isToday?"#fff":"#666"}}>{d.getDate()}</span>
+        <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:24}}>
+          <button className="nbtn" onClick={()=>setWeekOffset(p=>p-1)} style={{width:28,height:28,borderRadius:14,border:"none",background:"#252525",color:"#666",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>‹</button>
+          <div style={{flex:1,display:"flex",justifyContent:"space-between"}}>
+            {weekDays.map((d,i)=>{
+              const isToday=d.toDateString()===today.toDateString();
+              const dKey=d.toISOString().slice(0,10);
+              const isSelected=dKey===selectedDate;
+              const isFuture=d>today;
+              const hasPastData=!isToday&&!isFuture&&Object.values(history).some(entries=>entries.some(e=>e.date===dKey));
+              return (
+                <div key={i} onClick={()=>!isFuture&&setSelectedDate(dKey)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:isFuture?"default":"pointer",opacity:isFuture?0.3:1}}>
+                  <span style={{fontSize:11,fontWeight:600,color:isSelected||isToday?F.orange:"#555",letterSpacing:"0.04em"}}>{DAY_NAMES[i]}</span>
+                  <div style={{width:38,height:38,borderRadius:10,background:isSelected?"#3a3a3a":isToday?"#333":"transparent",border:isSelected?`2px solid ${F.orange}`:"2px solid transparent",display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+                    <span style={{fontSize:18,fontWeight:isSelected||isToday?700:400,color:isSelected||isToday?"#fff":"#666"}}>{d.getDate()}</span>
+                    {hasPastData&&!isSelected&&<div style={{position:"absolute",bottom:4,width:4,height:4,borderRadius:2,background:"#555"}}/>}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+          <button className="nbtn" onClick={()=>setWeekOffset(p=>Math.min(p+1,0))} disabled={weekOffset>=0} style={{width:28,height:28,borderRadius:14,border:"none",background:"#252525",color:weekOffset>=0?"#2e2e2e":"#666",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>›</button>
         </div>
 
         {/* Workouts section header */}
-        <SectionHeader icon="🏋️" title="Workouts" sub={`${sessions.length} ${sessions.length===1?"Session":"Sessions"} Today`}/>
+        <SectionHeader icon="🏋️" title="Workouts" sub={isViewingToday?`${viewSessions.length} ${viewSessions.length===1?"Session":"Sessions"} Today`:`${viewSessions.length} ${viewSessions.length===1?"Session":"Sessions"} · ${new Date(selectedDate+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"})}`}/>
 
-        {/* Client quick-add chips */}
-        {clients.length>0&&(
+        {/* Client quick-add chips — today only */}
+        {isViewingToday&&clients.length>0&&(
           <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
             {clients.map(c=>{
               const already=sessions.find(s=>s.clientName===c.name);
@@ -520,15 +558,15 @@ Every exercise: name, sets×reps, load/intensity, rest. Sound like a real coach.
         )}
       </div>
 
-      {sessions.length===0?(
-        <EmptySlate icon="🏋️" title="No sessions today" body={clients.length===0?"Add clients first, then sync your calendar.":"Sync your calendar or tap a client name above."}/>
+      {viewSessions.length===0?(
+        <EmptySlate icon="🏋️" title={isViewingToday?"No sessions today":"No sessions on this day"} body={isViewingToday?(clients.length===0?"Add clients first, then sync your calendar.":"Sync your calendar or tap a client name above."):"No workouts were recorded for this date."}/>
       ):(
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {sessions.map((s,i)=>{
+          {viewSessions.map((s,i)=>{
             const client=matchClient(s.clientName);
             const lv=LEVEL_META[client?.level||"medium"];
-            const workout=workouts[s.clientName];
-            const isGen=generating[s.clientName];
+            const workout=viewWorkouts[s.clientName];
+            const isGen=isViewingToday&&generating[s.clientName];
             const sections=workout?parseSections(workout):[];
             const iconColors=["#8968CD","#E05A3A","#E09B2A","#3A8EE0","#3AB87A"];
             const iconBg=iconColors[i%iconColors.length];
@@ -545,13 +583,13 @@ Every exercise: name, sets×reps, load/intensity, rest. Sound like a real coach.
                     </div>
                   </div>
                   <div className="no-print" style={{display:"flex",gap:8,alignItems:"center"}}>
-                    {!workout&&!isGen&&(
+                    {isViewingToday&&!workout&&!isGen&&(
                       <button className="abtn" onClick={()=>generate(s.clientName)} style={{height:36,padding:"0 16px",borderRadius:100,border:"none",background:F.orange,color:"#fff",fontSize:13,fontWeight:700}}>
                         ⚡ Generate
                       </button>
                     )}
                     {isGen&&<span style={{fontSize:13,color:"#888",animation:"pulse 1.4s infinite"}}>Building…</span>}
-                    {workout&&!isGen&&(
+                    {isViewingToday&&workout&&!isGen&&(
                       <button className="nbtn" onClick={()=>generate(s.clientName)} style={{width:36,height:36,borderRadius:18,border:"none",background:"#333",color:"#aaa",fontSize:14}}>↺</button>
                     )}
                     {workout&&!isGen&&(
@@ -559,7 +597,7 @@ Every exercise: name, sets×reps, load/intensity, rest. Sound like a real coach.
                         {sharePopup===s.clientName?"✓":"⎘"}
                       </button>
                     )}
-                    <button className="nbtn" onClick={()=>{ const ns=sessions.filter((_,j)=>j!==i); const nw={...workouts}; delete nw[s.clientName]; saveToday({...todayData,sessions:ns,workouts:nw}); }} style={{width:36,height:36,borderRadius:18,border:"none",background:"#333",color:"#888",fontSize:16}}>×</button>
+                    {isViewingToday&&<button className="nbtn" onClick={()=>{ const ns=sessions.filter((_,j)=>j!==i); const nw={...workouts}; delete nw[s.clientName]; saveToday({...todayData,sessions:ns,workouts:nw}); }} style={{width:36,height:36,borderRadius:18,border:"none",background:"#333",color:"#888",fontSize:16}}>×</button>}
                   </div>
                 </div>
 
