@@ -5,6 +5,10 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --timeout 120 --workers 2 wsgi:app
     plan: starter          # avoids free-tier cold starts / sleep
+    disk:
+      name: pm-data
+      mountPath: /data
+      sizeGB: 1
     envVars:
       - key: FLASK_SECRET_KEY
         generateValue: true
